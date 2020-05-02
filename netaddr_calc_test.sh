@@ -64,8 +64,18 @@ test_test()
     test echo echo 0 'hello world' hello world
 }
 
+# Test address+mask splitting
+test_addrmask()
+{
+    test addr4 ip_addrmask2addr 0 192.168.2.59 192.168.2.59/24 
+    test mask4 ip_addrmask2mask 0 24 192.168.2.59/24 
+    test addr6 ip_addrmask2addr 0 2001:470:5a02:0:9441:4471:82d3:368c \
+        2001:470:5a02:0:9441:4471:82d3:368c/64
+    test mask6 ip_addrmask2mask 0 64 2001:470:5a02:0:9441:4471:82d3:368c/64
+}
+
 # List of test suites (separated by whitespace)
-TEST_SUITES='test'
+TEST_SUITES='addrmask test'
 
 ### Entry point ##############################################################
 
@@ -73,8 +83,8 @@ if [ "$#" = 0 ]; then
     set $TEST_SUITES
 fi
 for t in $*; do
-    case " $t " in
-        " $TEST_SUITES ")
+    case " $TEST_SUITES " in
+        *" $t "*)
             ;;
         *)
             echo "Unknown test suite \"$t\". Available test suites:"
