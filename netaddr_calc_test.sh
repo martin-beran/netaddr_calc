@@ -136,6 +136,13 @@ test_ipv4()
     test ipv4_and_2 ipv4_and 0 172.16.0.0 172.20.2.1 255.240.0.0
     test ipv4_or_1 ipv4_or 0 172.20.2.1 172.16.0.0 0.4.2.1
     test ipv4_or_2 ipv4_or 0 192.168.31.255 192.168.16.1 0.0.15.255
+
+    test ipv4_combine_1 ipv4_combine 0 192.168.1.4 \
+        192.168.1.1 255.255.255.0 10.1.2.4
+    test ipv4_combine_2 ipv4_combine 0 10.232.3.100 \
+        10.236.16.1 255.240.0.0 192.168.3.100
+    test ipv4_combine_3 ipv4_combine 0 192.168.2.1 \
+        192.168.30.1 255.255.0.255 10.1.2.3
 }
 
 # Test the test environment
