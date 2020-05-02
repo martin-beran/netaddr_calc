@@ -115,7 +115,23 @@ test_bytes()
     test bytes_or_2 bytes_or 0 1 0 1
     test bytes_or_3 bytes_or 0 1 1 0
     test bytes_or_4 bytes_or 0 1 1 1
-    test bytes_and_5 bytes_or 0 0.255.15.255 0.255.0.254 0.0.15.15
+    test bytes_or_5 bytes_or 0 0.255.15.255 0.255.0.254 0.0.15.15
+
+    test bytes_from_hex_0_1 bytes_from_hex 0 0 0
+    test bytes_from_hex_0_2 bytes_from_hex 0 0 0x0
+    test bytes_from_hex_0_3 bytes_from_hex 0 0 00
+    test bytes_from_hex_0_4 bytes_from_hex 0 0 0x00
+    test bytes_from_hex_0_5 bytes_from_hex 0 0 0-0
+    test bytes_from_hex_0_6 bytes_from_hex 0 0 0:0
+    test bytes_from_hex_x bytes_from_hex 0 3 3
+    test bytes_from_hex_x_lo bytes_from_hex 0 26 1a
+    test bytes_from_hex_x_hi bytes_from_hex 0 160 A0
+    test bytes_from_hex_x_delim bytes_from_hex 0 160 a:0
+    test bytes_from_hex_x_mix bytes_from_hex 0 254 fE
+    test bytes_from_hex_multi bytes_from_hex 0 1.162.179.77 0x01a2b34d
+    test bytes_from_hex_multi_delim1 bytes_from_hex 0 1.162.179.77 01:a2:b3:4d
+    test bytes_from_hex_multi_delim2 bytes_from_hex 0 \
+        1.162.59.196.93.110 01-A2-3B-c4-5D-6e
 }
 
 # Test operations with IPv4 addresses

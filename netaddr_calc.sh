@@ -122,24 +122,59 @@ bytes_bits2mask()
     echo ${mask#.}
 }
 
+# bytes_invert BYTES
+# Invert all bits of a sequence of bytes
+# P: BYTES = a sequence of bytes
+# O: BYTES with all bit values inverted
+bytes_invert()
+{
+    local bytes
+    bytes="$1"
+    _bytes_apply _bytes_op_invert $bytes $bytes
+}
+
+# bytes_and BYTES1 BYTES2
+# Apply bitwise AND to corresponding bits of two sequences of bytes
+# P: BYTES1, BYTES2 = input sequences of the same number of bytes
+# O: result of bitwise AND
+bytes_and()
+{
+    local bytes1 bytes2
+    bytes1="$1"
+    bytes2="$2"
+    _bytes_apply _bytes_op_and $bytes1 $bytes2
+}
+
+# bytes_or BYTES1 BYTES2
+# Apply bitwise OR to corresponding bits of two sequences of bytes
+# P: BYTES1, BYTES2 = input sequences of the same number of bytes
+# O: result of bitwise OR
+bytes_or()
+{
+    local bytes1 bytes2
+    bytes1="$1"
+    bytes2="$2"
+    _bytes_apply _bytes_op_or $bytes1 $bytes2
+}
+
 # Auxiliary functions for bytes_invert, bytes_and, bytes_or
 
-bytes_op_invert()
+_bytes_op_invert()
 {
     echo $((255^$1))
 }
 
-bytes_op_and()
+_bytes_op_and()
 {
     echo $(($1&$2))
 }
 
-bytes_op_or()
+_bytes_op_or()
 {
     echo $(($1|$2))
 }
 
-bytes_apply()
+_bytes_apply()
 {
     local op bytes1 bytes2 result b1 b2
     op="$1"
@@ -156,37 +191,30 @@ bytes_apply()
     echo ${result#.}
 }
 
-# bytes_invert BYTES
-# Invert all bits of a sequence of bytes
-# P: BYTES = a sequence of bytes
-# O: BYTES with all bit values inverted
-bytes_invert()
+# bytes_from_hex HEX
+# Converts a hexadecimal number, upper or lower case, with optional '0x' prefix
+# and with separators (any non-hexdigit characters) between any digits. 
+bytes_from_hex()
 {
-    local bytes
-    bytes="$1"
-    bytes_apply bytes_op_invert $bytes $bytes
-}
-
-# bytes_and BYTES1 BYTES2
-# Apply bitwise AND to corresponding bits of two sequences of bytes
-# P: BYTES1, BYTES2 = input sequences of the same number of bytes
-# O: result of bitwise AND
-bytes_and()
-{
-    local bytes1 bytes2
-    bytes1="$1"
-    bytes2="$2"
-    bytes_apply bytes_op_and $bytes1 $bytes2
-}
-
-# bytes_or BYTES1 BYTES2
-# Apply bitwise OR to corresponding bits of two sequences of bytes
-# P: BYTES1, BYTES2 = input sequences of the same number of bytes
-# O: result of bitwise OR
-bytes_or()
-{
-    local bytes1 bytes2
-    bytes1="$1"
-    bytes2="$2"
-    bytes_apply bytes_op_or $bytes1 $bytes2
+    local hex result c tail byte
+    hex="$1"
+    hex=${hex#0[Xx]}
+    result=''
+    byte=''
+    while [ -n "$hex" ]; do
+        tail=${hex#?}
+        c=${hex%$tail}
+        hex="$tail"
+        case "$c" in
+            [0-9A-Fa-f])
+                byte="$byte$c"
+                ;;
+        esac
+        if [ ${#byte} = 2 -o -z "$hex" ]; then
+            byte="0x$byte"
+            result="$result.$((byte))"
+            byte=''
+        fi
+    done
+    echo "${result#.}"
 }
