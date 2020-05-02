@@ -4,10 +4,30 @@
 # In documentation comments of functions, P = parameters, O = stdout,
 # E = stderr, R = return value (exit status, 0 if unspecified)
 
+# Boolean values use the reverted shell logic true=0, false=1.
+
 ### Operations on IPv4 addresses #############################################
 
 # An IPv4 address is represented in the usual format of 4 decimal numbers
 # delimited by '.' characters.
+
+# ipv4_from_bytes BYTES
+# Convert a sequence of bytes to an IPv4 address.
+# P: BYTES = a sequence of bytes
+# O: BYTES converted to an IPv4 address
+ipv4_from_bytes()
+{
+    echo "$1"
+}
+
+# ipv4_to_bytes IP
+# Convert an IPv4 address to a sequence of bytes.
+# P: IP = an IPv4 address
+# O: IP as a sequence of bytes
+ipv4_to_bytes()
+{
+    echo "$1"
+}
 
 # ipv4_bits2mask BITS
 # Convert a number of bits to a bitmask
@@ -69,6 +89,80 @@ ipv4_combine()
 
 ### Operations on MAC (Ethernet) addresses ###################################
 
+# mac_from_bytes BYTES
+# Converts a sequence of bytes to a MAC address. For other output formats, use
+# bytes_to_hex.
+# P: BYTES = a sequence of bytes
+# O: BYTES converted to lowercase hexadecimal with bytes delimited by ':'
+mac_from_bytes()
+{
+    bytes_to_hex "$1" '' 'lower' ':' ''
+}
+
+# mac_to_bytes MAC
+# Convert a MAC address to a sequence of bytes.
+# P: MAC = a MAC address, upper or lowercase, with any delimiters between
+#          digits or bytes
+# O: MAC converted to a sequence of bytes
+mac_to_bytes()
+{
+    bytes_from_hex "$1"
+}
+
+# mac_is_bcast MAC
+# Test if a MAC address is broadcast.
+# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+# R: 0 if MAC is a broadcast address, 1 otherwise
+mac_is_bcast()
+{
+    _mac_is_mask "$1" 255.255.255.255.255.255
+}
+
+# mac_is_mcast MAC
+# Test if a MAC address is multicast.
+# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+# R: 0 if MAC is a multicast (including broadcast) address, 1 otherwise
+mac_is_mcast()
+{
+    _mac_is_mask "$1" 1.0.0.0.0.0
+}
+
+# mac_is_universal MAC
+# Test if a MAC address is universally or locally administered.
+# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+# R: 0 if MAC is a universally administered, 1 if locally administered
+mac_is_universal()
+{
+    ! _mac_is_mask "$1" 2.0.0.0.0.0
+}
+
+# mac_set_bits MAC UNIVERSAL MCAST
+# Set special bits in a MAC address.
+# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+#    UNIVERSAL = sets the address as universally (0) or locally (1)
+#                administered; other values do not modify the universal/local
+#                bit
+#    MCAST = sets the address as multicast (0) or unicast (1); other values
+#            do not modify the multicast/unicast bit
+# O: the modified MAC address (in format of mac_from_bytes)
+mac_set_bits()
+{
+    local mac u m
+    mac="$1"
+    u="$2"
+    m="$3"
+    mac=`mac_to_bytes "$mac"`
+    case "$u" in
+        0) mac=`bytes_and $mac 253.255.255.255.255.255`;;
+        1) mac=`bytes_or $mac 2.0.0.0.0.0`;;
+    esac
+    case "$m" in
+        0) mac=`bytes_or $mac 1.0.0.0.0.0`;;
+        1) mac=`bytes_and $mac 254.255.255.255.255.255`;;
+    esac
+    echo `mac_from_bytes $mac`
+}
+
 ### IP/MASK pair #############################################################
 
 # ip_addrmask2addr ADDRMASK
@@ -91,8 +185,63 @@ ip_addrmask2mask()
 
 ### Operations on sequences of bytes #########################################
 
-# Auxiliary functions working with sequences of bytes, written as decimal
-# numbers delimited by '.'
+# Functions working with sequences of bytes, written as decimal numbers
+# delimited by '.'
+
+# bytes_from_hex HEX
+# Convert a hexadecimal number, upper or lower case, with optional '0x' prefix
+# and with separators (any non-hexdigit characters) between any digits.
+bytes_from_hex()
+{
+    local hex result c tail byte
+    hex="$1"
+    hex=${hex#0[Xx]}
+    result=''
+    byte=''
+    while [ -n "$hex" ]; do
+        tail=${hex#?}
+        c=${hex%$tail}
+        hex="$tail"
+        case "$c" in
+            [0-9A-Fa-f]) byte="$byte$c";;
+        esac
+        if [ ${#byte} = 2 -o -z "$hex" ]; then
+            byte="0x$byte"
+            result="$result.$((byte))"
+            byte=''
+        fi
+    done
+    echo "${result#.}"
+}
+
+# bytes_to_hex BYTES PREFIX UPPER DELIM2 DELIM1
+# Covert a sequence of bytes to a hexadecimal number.
+# P: BYTES = a sequence of bytes
+#    PREFIX = a prefix of result, usually '' (empty), '0x', or '0X'
+#    UPPER = use uppercase hexadecimal digits if UPPER starts with 'U' or 'u';
+#            use lowercase otherwise
+#    DELIM2 = a delimiter between bytes
+#    DELIM1 = a delimiter between digits in a byte
+bytes_to_hex()
+{
+    local bytes prefix upper delim2 delim1 result b
+    bytes="$1."
+    prefix="$2"
+    upper="$3"
+    delim2="$4"
+    delim1="$5"
+    result="$prefix"
+    while [ -n "$bytes" ]; do
+        b=${bytes%%.*}
+        bytes=${bytes#*.}
+        case "$upper" in
+            [Uu]*) b=`printf '%X%s%X' $((b/16)) "$delim1" $((b%16))`;;
+            *) b=`printf '%x%s%x' $((b/16)) "$delim1" $((b%16))`;;
+        esac
+        result="$result$delim2$b"
+    done
+    echo "${result#$delim2}"
+}
 
 # bytes_bits2mask BYTES BITS
 # Convert a number of bits to a bitmask
@@ -157,7 +306,7 @@ bytes_or()
     _bytes_apply _bytes_op_or $bytes1 $bytes2
 }
 
-# Auxiliary functions for bytes_invert, bytes_and, bytes_or
+### Internal functions #######################################################
 
 _bytes_op_invert()
 {
@@ -191,30 +340,12 @@ _bytes_apply()
     echo ${result#.}
 }
 
-# bytes_from_hex HEX
-# Converts a hexadecimal number, upper or lower case, with optional '0x' prefix
-# and with separators (any non-hexdigit characters) between any digits. 
-bytes_from_hex()
+_mac_is_mask()
 {
-    local hex result c tail byte
-    hex="$1"
-    hex=${hex#0[Xx]}
-    result=''
-    byte=''
-    while [ -n "$hex" ]; do
-        tail=${hex#?}
-        c=${hex%$tail}
-        hex="$tail"
-        case "$c" in
-            [0-9A-Fa-f])
-                byte="$byte$c"
-                ;;
-        esac
-        if [ ${#byte} = 2 -o -z "$hex" ]; then
-            byte="0x$byte"
-            result="$result.$((byte))"
-            byte=''
-        fi
-    done
-    echo "${result#.}"
+    local mac mask
+    mac="$1"
+    mask="$2"
+    mac=`mac_to_bytes "$mac"`
+    mac=`bytes_and "$mac" "$mask"`
+    test "$mac" = "$mask"
 }
