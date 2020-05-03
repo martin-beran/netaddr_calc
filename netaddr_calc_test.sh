@@ -178,11 +178,23 @@ test_ipv4()
     run_test ipv4_or_2 ipv4_or 0 192.168.31.255 192.168.16.1 0.0.15.255
 
     run_test ipv4_combine_1 ipv4_combine 0 192.168.1.4 \
-        192.168.1.1 255.255.255.0 10.1.2.4
+        192.168.1.1 10.1.2.4 255.255.255.0
     run_test ipv4_combine_2 ipv4_combine 0 10.232.3.100 \
-        10.236.16.1 255.240.0.0 192.168.3.100
+        10.236.16.1 192.168.3.100 255.240.0.0
     run_test ipv4_combine_3 ipv4_combine 0 192.168.2.1 \
-        192.168.30.1 255.255.0.255 10.1.2.3
+        192.168.30.1 10.1.2.3 255.255.0.255
+    run_test ipv4_combine_mask_0 ipv4_combine 0 10.1.2.3 \
+        192.168.30.1 10.1.2.3 0.0.0.0
+    run_test ipv4_combine_mask_32 ipv4_combine 0 192.168.30.1 \
+        192.168.30.1 10.1.2.3 255.255.255.255
+    run_test ipv4_combine_no_mask ipv4_combine 0 192.168.2.40 \
+        192.168.2.1 10.20.30.40
+    run_test ipv4_combine_empty_mask ipv4_combine 0 192.168.2.40 \
+        192.168.2.1 10.20.30.40 ''
+    run_test ipv4_combine_hex_mask ipv4_combine 0 192.168.30.40 \
+        192.168.2.1 10.20.30.40 0xffff0000
+    run_test ipv4_combine_hex_prefix ipv4_combine 0 192.168.14.40 \
+        192.168.2.1 10.20.30.40 20
 }
 
 # Test operations with IPv6 addresses
