@@ -44,7 +44,7 @@ ipv4_bits2mask()
 # O: IP with all bits inverted
 ipv4_invert()
 {
-    bytes_invert $1
+    bytes_invert `ipv4_to_bytes $1`
 }
 
 # ipv4_and IP1 IP2
@@ -53,7 +53,7 @@ ipv4_invert()
 # O: addresses combined
 ipv4_and()
 {
-    bytes_and $1 $2
+    bytes_and `ipv4_to_bytes $1` `ipv4_to_bytes $2`
 }
 
 # ipv4_or IP1 IP2
@@ -62,7 +62,7 @@ ipv4_and()
 # O: addresses combined
 ipv4_or()
 {
-    bytes_or $1 $2
+    bytes_or `ipv4_to_bytes $1` `ipv4_to_bytes $2`
 }
 
 # ipv4_combine NET IP [MASK]
@@ -77,8 +77,8 @@ ipv4_or()
 ipv4_combine()
 {
     local net mask ip
-    net="$1"
-    ip="$2"
+    net=`ipv4_to_bytes "$1"`
+    ip=`ipv4_to_bytes "$2"`
     mask="$3"
     case "$mask" in
         '') mask=`ipv4_bits2mask 24`;;
