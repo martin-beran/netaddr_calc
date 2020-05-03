@@ -65,20 +65,27 @@ ipv4_or()
     bytes_or $1 $2
 }
 
-# ipv4_combine NET MASK IP
+# ipv4_combine NET IP [MASK]
 # Combines a network address and a local part of an address into a single IPv4
 # address
 # P: NET = an IPv4 address of a network (only bits in MASK are significant)
-#    MASK = a netmask for selecting significant bits from NET and IP; it is
-#           a full mask, not a number of bits (use ipv4_bits2mask for a number
-#           of bits)
 #    IP = a local IPv4 address (only bits not in MASK are significant)
+#    MASK = a netmask for selecting significant bits from NET and IP; it can be
+#           a full mask as 4 period-separated decimal numbers or a single
+#           hexadecimal number starting with '0x', or a number of bits; if
+#           empty or missing, 24 is used
 ipv4_combine()
 {
     local net mask ip
     net="$1"
-    mask="$2"
-    ip="$3"
+    ip="$2"
+    mask="$3"
+    case "$mask" in
+        '') mask=`ipv4_bits2mask 24`;;
+        0x*) mask=`bytes_from_hex $mask`;;
+        *.*) mask=`ipv4_to_bytes $mask`;;
+        *) mask=`ipv4_bits2mask $mask`;;
+    esac
     net=`bytes_and $net $mask`
     mask=`bytes_invert $mask`
     ip=`bytes_and $ip $mask`
