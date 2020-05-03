@@ -94,13 +94,82 @@ ipv4_combine()
 
 ### Operations on IPv6 addresses #############################################
 
-# ipv6_from_bytes BYTES
+# ipv6_from_bytes BYTES FORMAT
 # Convert a sequence of bytes to an IPv6 address.
 # P: BYTES = a sequence of bytes
+#    FORMAT = a format of the result (canonical if invalid, missing, or empty):
+#             - canonical (any word '[Cc]*'): default, canonical textual
+#               representation according to RFC 5952
+#             - short (any word '[Ss]*'): the same as canonical
+#             - long (any word '[Ll]*'): without using '::', but leading zeros
+#               in individual 16-bit values omitted
+#             - full (any word '[Ff]*'): without using '::', each 16-bit value
+#               written as 4 hexadecimal digits (with leading zeros)
 # O: BYTES converted to an IPv6 address
 ipv6_from_bytes()
 {
-    : # TODO
+    local bytes format b result imax i lmax l
+    bytes="$1."
+    format="$2"
+    result=''
+    case "$format" in
+        [Ss]*) format=short;;
+        [Ll]*) format=long;;
+        [Ff]*) format=full;;
+        *) format=short;;
+    esac
+    while [ -n "$bytes" ]; do
+        b=${bytes%%.*}
+        bytes=${bytes#*.}
+        b=$((256*b+${bytes%%.*}))
+        bytes=${bytes#*.}
+        case "$format" in
+            short|long) result="$result:`printf %x $b`";;
+            full) result="$result:`printf %04x $b`";;
+        esac
+    done
+    result=${result#:}
+    if [ "$format" = short ]; then
+        bytes="$result:"
+        imax=0
+        lmax=0
+        i=0
+        l=0
+        while [ -n "$bytes" ]; do
+            b=${bytes%%:*}
+            bytes=${bytes#*:}
+            if [ "$b" = 0 ]; then
+                l=$((l+1))
+                if [ $l -gt $lmax ]; then
+                    imax=$i
+                    lmax=$l
+                fi
+            else
+                i=$((i+l+1))
+                l=0
+            fi
+        done
+        if [ $lmax -gt 1 ]; then
+            bytes="$result:"
+            result=''
+            i=0
+            while [ $i -lt $imax ]; do
+                result="$result:${bytes%%:*}"
+                bytes=${bytes#*:}
+                i=$((i+1))
+            done
+            i=0
+            while [ $i -lt $lmax ]; do
+                bytes=${bytes#*:}
+                i=$((i+1))
+            done
+            result="$result::${bytes%:}"
+            if [ $imax -gt 0 ]; then
+                result=${result#:}
+            fi
+        fi
+    fi
+    echo "$result"
 }
 
 # ipv6_to_bytes IP

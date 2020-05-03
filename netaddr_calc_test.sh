@@ -238,6 +238,77 @@ test_ipv6()
     run_test ipv6_to_bytes_llocal ipv6_to_bytes 0 \
         254.128.0.0.0.0.0.0.185.2.212.180.169.203.117.198 \
         fe80::b902:d4b4:a9cb:75c6%eno2
+
+    run_test ipv6_from_bytes_0 ipv6_from_bytes 0 \
+        :: 0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0
+    run_test ipv6_from_bytes_full ipv6_from_bytes 0 \
+        2001:470:5a02:0:7308:c5e:6e:f \
+        32.1.4.112.90.2.0.0.115.8.12.94.0.110.0.15
+    run_test ipv6_from_bytes_short_begin_1 ipv6_from_bytes 0 \
+        0:470:5a02:0:7308:c5e:6e:f \
+        0.0.4.112.90.2.0.0.115.8.12.94.0.110.0.15
+    run_test ipv6_from_bytes_short_begin_2 ipv6_from_bytes 0 \
+        ::5a02:0:7308:c5e:6e:f \
+        0.0.0.0.90.2.0.0.115.8.12.94.0.110.0.15
+    run_test ipv6_from_bytes_short_end_1 ipv6_from_bytes 0 \
+        2001:470:5a02:0:7308:c5e:6e:0 \
+        32.1.4.112.90.2.0.0.115.8.12.94.0.110.0.0
+    run_test ipv6_from_bytes_short_end_1a ipv6_from_bytes 0 \
+        2001:470:5a02:a:7308:c5e:6e:0 \
+        32.1.4.112.90.2.0.10.115.8.12.94.0.110.0.0
+    run_test ipv6_from_bytes_short_end_2 ipv6_from_bytes 0 \
+        2001:470:5a02:0:7308:c5e:: \
+        32.1.4.112.90.2.0.0.115.8.12.94.0.0.0.0
+    run_test ipv6_from_bytes_short_mid_1 ipv6_from_bytes 0 \
+        2001:470:5a02:0:7308:c5e:6e:f \
+        32.1.4.112.90.2.0.0.115.8.12.94.0.110.0.15
+    run_test ipv6_from_bytes_short_mid_2 ipv6_from_bytes 0 \
+        2001:470:5a02::c5e:6e:f \
+        32.1.4.112.90.2.0.0.0.0.12.94.0.110.0.15
+    run_test ipv6_from_bytes_short_mid_6 ipv6_from_bytes 0 \
+        2001::f 32.1.0.0.0.0.0.0.0.0.0.0.0.0.0.15
+    run_test ipv6_from_bytes_format_none ipv6_from_bytes 0 \
+        2001::abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0
+    run_test ipv6_from_bytes_format_empty ipv6_from_bytes 0 \
+        2001::abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 ''
+    run_test ipv6_from_bytes_format_canonical ipv6_from_bytes 0 \
+        2001::abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 canonical
+    run_test ipv6_from_bytes_format_c_up ipv6_from_bytes 0 \
+        2001::abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 C
+    run_test ipv6_from_bytes_format_c_lo ipv6_from_bytes 0 \
+        2001::abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 c
+    run_test ipv6_from_bytes_format_short ipv6_from_bytes 0 \
+        2001::abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 short
+    run_test ipv6_from_bytes_format_s_up ipv6_from_bytes 0 \
+        2001::abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 S
+    run_test ipv6_from_bytes_format_s_lo ipv6_from_bytes 0 \
+        2001::abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 s
+    run_test ipv6_from_bytes_format_long ipv6_from_bytes 0 \
+        2001:0:0:abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 long
+    run_test ipv6_from_bytes_format_l_up ipv6_from_bytes 0 \
+        2001:0:0:abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 L
+    run_test ipv6_from_bytes_format_l_lo ipv6_from_bytes 0 \
+        2001:0:0:abcd:123:45:6:0 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 l
+    run_test ipv6_from_bytes_format_full ipv6_from_bytes 0 \
+        2001:0000:0000:abcd:0123:0045:0006:0000 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 full
+    run_test ipv6_from_bytes_format_f_up ipv6_from_bytes 0 \
+        2001:0000:0000:abcd:0123:0045:0006:0000 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 F
+    run_test ipv6_from_bytes_format_f_lo ipv6_from_bytes 0 \
+        2001:0000:0000:abcd:0123:0045:0006:0000 \
+        32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 f
     # TODO
 }
 
