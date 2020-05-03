@@ -44,7 +44,7 @@ ipv4_bits2mask()
 # O: IP with all bits inverted
 ipv4_invert()
 {
-    bytes_invert $1
+    bytes_invert `ipv4_to_bytes $1`
 }
 
 # ipv4_and IP1 IP2
@@ -53,7 +53,7 @@ ipv4_invert()
 # O: addresses combined
 ipv4_and()
 {
-    bytes_and $1 $2
+    bytes_and `ipv4_to_bytes $1` `ipv4_to_bytes $2`
 }
 
 # ipv4_or IP1 IP2
@@ -62,7 +62,7 @@ ipv4_and()
 # O: addresses combined
 ipv4_or()
 {
-    bytes_or $1 $2
+    bytes_or `ipv4_to_bytes $1` `ipv4_to_bytes $2`
 }
 
 # ipv4_combine NET IP [MASK]
@@ -77,8 +77,8 @@ ipv4_or()
 ipv4_combine()
 {
     local net mask ip
-    net="$1"
-    ip="$2"
+    net=`ipv4_to_bytes "$1"`
+    ip=`ipv4_to_bytes "$2"`
     mask="$3"
     case "$mask" in
         '') mask=`ipv4_bits2mask 24`;;
@@ -93,6 +93,230 @@ ipv4_combine()
 }
 
 ### Operations on IPv6 addresses #############################################
+
+# ipv6_from_bytes BYTES FORMAT
+# Convert a sequence of bytes to an IPv6 address.
+# P: BYTES = a sequence of bytes
+#    FORMAT = a format of the result (canonical if invalid, missing, or empty):
+#             - canonical (any word '[Cc]*'): default, canonical textual
+#               representation according to RFC 5952
+#             - short (any word '[Ss]*'): the same as canonical
+#             - long (any word '[Ll]*'): without using '::', but leading zeros
+#               in individual 16-bit values omitted
+#             - full (any word '[Ff]*'): without using '::', each 16-bit value
+#               written as 4 hexadecimal digits (with leading zeros)
+# O: BYTES converted to an IPv6 address
+ipv6_from_bytes()
+{
+    local bytes format b result imax i lmax l
+    bytes="$1."
+    format="$2"
+    result=''
+    case "$format" in
+        [Ss]*) format=short;;
+        [Ll]*) format=long;;
+        [Ff]*) format=full;;
+        *) format=short;;
+    esac
+    while [ -n "$bytes" ]; do
+        b=${bytes%%.*}
+        bytes=${bytes#*.}
+        b=$((256*b+${bytes%%.*}))
+        bytes=${bytes#*.}
+        case "$format" in
+            short|long) result="$result:`printf %x $b`";;
+            full) result="$result:`printf %04x $b`";;
+        esac
+    done
+    result=${result#:}
+    if [ "$format" = short ]; then
+        bytes="$result:"
+        imax=0
+        lmax=0
+        i=0
+        l=0
+        while [ -n "$bytes" ]; do
+            b=${bytes%%:*}
+            bytes=${bytes#*:}
+            if [ "$b" = 0 ]; then
+                l=$((l+1))
+                if [ $l -gt $lmax ]; then
+                    imax=$i
+                    lmax=$l
+                fi
+            else
+                i=$((i+l+1))
+                l=0
+            fi
+        done
+        if [ $lmax -gt 1 ]; then
+            bytes="$result:"
+            result=''
+            i=0
+            while [ $i -lt $imax ]; do
+                result="$result:${bytes%%:*}"
+                bytes=${bytes#*:}
+                i=$((i+1))
+            done
+            i=0
+            while [ $i -lt $lmax ]; do
+                bytes=${bytes#*:}
+                i=$((i+1))
+            done
+            result="$result::${bytes%:}"
+            if [ $imax -gt 0 ]; then
+                result=${result#:}
+            fi
+        fi
+    fi
+    echo "$result"
+}
+
+# ipv6_to_bytes IP
+# Convert an IPv6 address to a sequence of bytes.
+# P: IP = an IPv6 address
+# O: IP as a sequence of bytes
+ipv6_to_bytes()
+{
+    local ip1 ip2 bytes1 bytes2 n1 n2 add
+    ip1=`ipv6_lladdr2addr "$1"`
+    ip2=''
+    case "$ip1" in
+        *::*)
+            ip2=${ip1#*::}
+            ip1=${ip1%::*}
+            ;;
+    esac
+    read n1 bytes1 <<EOF
+`_ipv6_part_to_bytes "$ip1"`
+EOF
+    read n2 bytes2 <<EOF
+`_ipv6_part_to_bytes "$ip2"`
+EOF
+    add=$((16-n1-n2))
+    while [ $add -gt 0 ]; do
+        bytes1="$bytes1.0"
+        add=$((add-1))
+    done
+    bytes1="$bytes1$bytes2"
+    echo ${bytes1#.}
+}
+
+# ipv6_lladdr2addr IP
+# Remove scope id from an link-local IPv6 address.
+# P: IP = an IPv6 address
+# O: IP without trailing '%' and a scope id; IP unchanged if it does not
+#    contain a scope id
+ipv6_lladdr2addr()
+{
+    echo ${1%\%*}
+}
+
+# ipv6_lladdr2scope IP
+# Get a scope id from an link-local IPv6 address.
+# P: IP = an IPv6 address with optional '%scope'
+# O: the scope id (a part of IP after '%'); the empty string if IP does not
+#    contain a scope id
+ipv6_lladdr2scope()
+{
+    case "$1" in
+        *%*) echo ${1#*%};;
+        *) echo '';;
+    esac
+}
+
+# ipv6_bits2mask BITS
+# Convert a number of bits to a bitmask
+# P: BITS = number of initial bits
+# O: an with initial BITS bits set to 1, remaining bits set to 0
+ipv6_bits2mask()
+{
+    bytes_bits2mask 16 $1
+}
+
+# ipv6_invert IP
+# Invert all bits of an IPv6 address
+# P: IP = IPv6 address
+# O: IP with all bits inverted
+ipv6_invert()
+{
+    bytes_invert `ipv6_to_bytes $1`
+}
+
+# ipv6_and IP1 IP2
+# Combine two IPv6 addresses by bitwise AND
+# P: IP1, IP2 = IPv6 addresses
+# O: addresses combined
+ipv6_and()
+{
+    bytes_and `ipv6_to_bytes $1` `ipv6_to_bytes $2`
+}
+
+# ipv6_or IP1 IP2
+# Combine two IPv6 addresses by bitwise OR
+# P: IP1, IP2 = IPv6 addresses
+# O: addresses combined
+ipv6_or()
+{
+    bytes_or `ipv6_to_bytes $1` `ipv6_to_bytes $2`
+}
+
+# ipv6_combine NET IP [MASK]
+# Combines a network address and a local part of an address into a single IPv6
+# address
+# P: NET = an IPv6 address of a network (only bits in MASK are significant)
+#    IP = a local IPv6 address (only bits not in MASK are significant)
+#    MASK = a netmask for selecting significant bits from NET and IP; it can be
+#           an IPv6 address or a number of bits; if empty or missing, 64 is
+#           used
+ipv6_combine()
+{
+    local net mask ip
+    net=`ipv6_to_bytes "$1"`
+    ip=`ipv6_to_bytes "$2"`
+    mask="$3"
+    case "$mask" in
+        '') mask=`ipv6_bits2mask 64`;;
+        *:*) mask=`ipv6_to_bytes $mask`;;
+        *) mask=`ipv6_bits2mask $mask`;;
+    esac
+    net=`bytes_and $net $mask`
+    mask=`bytes_invert $mask`
+    ip=`bytes_and $ip $mask`
+    ipv6_from_bytes `bytes_or $net $ip`
+}
+
+# ipv6_eui64 MAC
+# Generate a local part of an IPv6 address from a MAC address
+# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+# O: an IPv6 address with upper 64 bits set to zero and lower 64 bits generated
+#    from MAC according to EUI-64
+ipv6_eui64()
+{
+    local mac
+    mac="$1"
+    ! mac_is_universal "$mac"
+    mac=`mac_set_bits $mac $?`
+    mac=`mac_to_bytes $mac`
+    ipv6_from_bytes 0.0.0.0.0.0.0.0.${mac%.*.*.*}.255.254.${mac#*.*.*.}
+}
+
+# ipv6_eui64_to_mac IP
+# Get a MAC address from an IPv6 address generated according to EUI-64
+# P: IP = an IPv6 address
+# O: the corresponding MAC address (in format of mac_from_bytes)
+ipv6_eui64_to_mac()
+{
+    local ip mac
+    ip="$1"
+    ip=`ipv6_to_bytes "$ip"`
+    ip=${ip#*.*.*.*.*.*.*.*.}
+    mac=${ip%.255.254.*.*.*}
+    mac="$mac.${ip#*.*.*.255.254.}"
+    mac=`mac_from_bytes $mac`
+    ! mac_is_universal "$mac"
+    mac_set_bits $mac $?
+}
 
 ### Operations on MAC (Ethernet) addresses ###################################
 
@@ -345,6 +569,24 @@ _bytes_apply()
         result="$result.`$op $b1 $b2`"
     done
     echo ${result#.}
+}
+
+_ipv6_part_to_bytes()
+{
+    local ip bytes n i b
+    ip="$1"
+    bytes=''
+    n=0
+    if [ -n "$ip" ]; then
+        ip="$ip:"
+    fi
+    while [ -n "$ip" ]; do
+        i=0x${ip%%:*}
+        ip=${ip#*:}
+        bytes="$bytes.$((i/256)).$((i%256))"
+        n=$((n+2))
+    done
+    echo "$n $bytes"
 }
 
 _mac_is_mask()
