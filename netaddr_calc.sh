@@ -225,6 +225,67 @@ ipv6_lladdr2scope()
     esac
 }
 
+# ipv6_bits2mask BITS
+# Convert a number of bits to a bitmask
+# P: BITS = number of initial bits
+# O: an with initial BITS bits set to 1, remaining bits set to 0
+ipv6_bits2mask()
+{
+    bytes_bits2mask 16 $1
+}
+
+# ipv6_invert IP
+# Invert all bits of an IPv6 address
+# P: IP = IPv6 address
+# O: IP with all bits inverted
+ipv6_invert()
+{
+    bytes_invert `ipv6_to_bytes $1`
+}
+
+# ipv6_and IP1 IP2
+# Combine two IPv6 addresses by bitwise AND
+# P: IP1, IP2 = IPv6 addresses
+# O: addresses combined
+ipv6_and()
+{
+    bytes_and `ipv6_to_bytes $1` `ipv6_to_bytes $2`
+}
+
+# ipv6_or IP1 IP2
+# Combine two IPv6 addresses by bitwise OR
+# P: IP1, IP2 = IPv6 addresses
+# O: addresses combined
+ipv6_or()
+{
+    bytes_or `ipv6_to_bytes $1` `ipv6_to_bytes $2`
+}
+
+# ipv6_combine NET IP [MASK]
+# Combines a network address and a local part of an address into a single IPv6
+# address
+# P: NET = an IPv6 address of a network (only bits in MASK are significant)
+#    IP = a local IPv6 address (only bits not in MASK are significant)
+#    MASK = a netmask for selecting significant bits from NET and IP; it can be
+#           an IPv6 address or a number of bits; if empty or missing, 64 is
+#           used
+ipv6_combine()
+{
+    local net mask ip
+    net=`ipv6_to_bytes "$1"`
+    ip=`ipv6_to_bytes "$2"`
+    mask="$3"
+    case "$mask" in
+        '') mask=`ipv6_bits2mask 64`;;
+        *:*) mask=`ipv6_to_bytes $mask`;;
+        *) mask=`ipv6_bits2mask $mask`;;
+    esac
+    net=`bytes_and $net $mask`
+    mask=`bytes_invert $mask`
+    ip=`bytes_and $ip $mask`
+    ipv6_from_bytes `bytes_or $net $ip`
+}
+
 ### Operations on MAC (Ethernet) addresses ###################################
 
 # mac_from_bytes BYTES

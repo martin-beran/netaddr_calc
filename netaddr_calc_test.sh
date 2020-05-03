@@ -161,11 +161,12 @@ test_ipv4()
 
     run_test ipv4_to_bytes ipv4_to_bytes 0 192.168.1.2 192.168.1.2
 
-    run_test bits2mask_0 ipv4_bits2mask 0 0.0.0.0 0
-    run_test bits2mask_8 ipv4_bits2mask 0 255.0.0.0 8
-    run_test bits2mask_12 ipv4_bits2mask 0 255.240.0.0 12
-    run_test bits2mask_16 ipv4_bits2mask 0 255.255.0.0 16
-    run_test bits2mask_24 ipv4_bits2mask 0 255.255.255.0 24
+    run_test ipv4_bits2mask_0 ipv4_bits2mask 0 0.0.0.0 0
+    run_test ipv4_bits2mask_8 ipv4_bits2mask 0 255.0.0.0 8
+    run_test ipv4_bits2mask_12 ipv4_bits2mask 0 255.240.0.0 12
+    run_test ipv4_bits2mask_16 ipv4_bits2mask 0 255.255.0.0 16
+    run_test ipv4_bits2mask_24 ipv4_bits2mask 0 255.255.255.0 24
+    run_test ipv4_bits2mask_32 ipv4_bits2mask 0 255.255.255.255 32
 
     run_test ipv4_invert_1 ipv4_invert 0 255.255.255.0 0.0.0.255
     run_test ipv4_invert_2 ipv4_invert 0 0.0.0.255 255.255.255.0
@@ -174,6 +175,7 @@ test_ipv4()
 
     run_test ipv4_and_1 ipv4_and 0 192.168.2.0 192.168.2.1 255.255.255.0
     run_test ipv4_and_2 ipv4_and 0 172.16.0.0 172.20.2.1 255.240.0.0
+
     run_test ipv4_or_1 ipv4_or 0 172.20.2.1 172.16.0.0 0.4.2.1
     run_test ipv4_or_2 ipv4_or 0 192.168.31.255 192.168.16.1 0.0.15.255
 
@@ -309,7 +311,47 @@ test_ipv6()
     run_test ipv6_from_bytes_format_f_lo ipv6_from_bytes 0 \
         2001:0000:0000:abcd:0123:0045:0006:0000 \
         32.1.0.0.0.0.171.205.1.35.0.69.0.6.0.0 f
-    # TODO
+
+    run_test ipv6_bits2mask_0 ipv6_bits2mask 0 \
+        0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0 0
+    run_test ipv6_bits2mask_8 ipv6_bits2mask 0 \
+        255.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0 8
+    run_test ipv6_bits2mask_20 ipv6_bits2mask 0 \
+        255.255.240.0.0.0.0.0.0.0.0.0.0.0.0.0 20
+    run_test ipv6_bits2mask_48 ipv6_bits2mask 0 \
+        255.255.255.255.255.255.0.0.0.0.0.0.0.0.0.0 48
+    run_test ipv6_bits2mask_64 ipv6_bits2mask 0 \
+        255.255.255.255.255.255.255.255.0.0.0.0.0.0.0.0 64
+    run_test ipv6_bits2mask_128 ipv6_bits2mask 0 \
+        255.255.255.255.255.255.255.255.255.255.255.255.255.255.255.255 128
+
+    run_test ipv6_invert_1 ipv6_invert 0 \
+        255.255.255.255.255.255.255.255.255.255.255.255.255.255.255.255 ::
+    run_test ipv6_invert_2 ipv6_invert 0 \
+        0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+    run_test ipv6_invert_3 ipv6_invert 0 \
+        255.255.255.255.255.255.255.255.0.0.0.0.0.0.0.0 ::ffff:ffff:ffff:ffff
+    run_test ipv6_invert_4 ipv6_invert 0 \
+        0.225.0.226.0.227.255.0.255.1.255.2.255.3.255.4 \
+        ff1e:ff1d:ff1c:ff::fe:fd:fc:fb
+
+    run_test ipv6_and_1 ipv6_and 0 0.0.0.0.0.0.0.0.0.0.0.0.18.0.86.120 \
+        fe80::ff00:ffff ::1234:5678
+
+    run_test ipv6_or_1 ipv6_or 0 254.128.0.0.0.0.0.0.0.0.0.0.255.52.255.255 \
+        fe80::ff00:ffff ::1234:5678
+
+    run_test ipv6_combine_1 ipv6_combine 0 \
+        2001:470:6f:ca1:b902:d4b4:a9cb:75c6 \
+        2001:470:6f:ca1::1 fe80::b902:d4b4:a9cb:75c6
+
+    run_test ipv6_combine_1 ipv6_combine 0 \
+        2001:470:6f:0:b902:d4b4:a9cb:75c6 \
+        2001:470:6f:ca1::1 fe80::b902:d4b4:a9cb:75c6 48
+
+    run_test ipv6_combine_1 ipv6_combine 0 \
+        2001:470:6f:0:b902:d4b4:a9cb:75c6 \
+        2001:470:6f:ca1::1 fe80::b902:d4b4:a9cb:75c6 ffff:ffff:ffff::
 }
 
 # Test operations with MAC addresses
