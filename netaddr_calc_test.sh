@@ -188,8 +188,45 @@ test_ipv4()
 # Test operations with IPv6 addresses
 test_ipv6()
 {
+    run_test ipv6_lladdr2addr_global ipv6_lladdr2addr 0 \
+        2001:470:6f:ca1:ed38:eb0f:69f:bd56 2001:470:6f:ca1:ed38:eb0f:69f:bd56
+    run_test ipv6_lladdr2addr_llocal ipv6_lladdr2addr 0 \
+        fe80::2e69:a4b4:5839:1ff8 fe80::2e69:a4b4:5839:1ff8%wlo1
+
+    run_test ipv6_lladdr2scope_global ipv6_lladdr2scope 0 \
+        '' 2001:470:6f:ca1:ed38:eb0f:69f:bd56
+    run_test ipv6_lladdr2scope_llocal ipv6_lladdr2scope 0 \
+        wlo1 fe80::2e69:a4b4:5839:1ff8%wlo1
+
+    run_test ipv6_to_bytes_0 ipv6_to_bytes 0 \
+        0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0 ::
+    run_test ipv6_to_bytes_full ipv6_to_bytes 0 \
+        32.1.4.112.90.2.0.0.115.8.12.94.0.110.0.15 \
+        2001:470:5a02:0:7308:c5e:6e:f
+    run_test ipv6_to_bytes_short_begin_1 ipv6_to_bytes 0 \
+        0.0.4.112.90.2.0.0.115.8.12.94.0.110.0.15 \
+        ::470:5a02:0:7308:c5e:6e:f
+    run_test ipv6_to_bytes_short_begin_2 ipv6_to_bytes 0 \
+        0.0.0.0.90.2.0.0.115.8.12.94.0.110.0.15 \
+        ::5a02:0:7308:c5e:6e:f
+    run_test ipv6_to_bytes_short_end_1 ipv6_to_bytes 0 \
+        32.1.4.112.90.2.0.0.115.8.12.94.0.110.0.0 \
+        2001:470:5a02:0:7308:c5e:6e::
+    run_test ipv6_to_bytes_short_end_2 ipv6_to_bytes 0 \
+        32.1.4.112.90.2.0.0.115.8.12.94.0.0.0.0 \
+        2001:470:5a02:0:7308:c5e::
+    run_test ipv6_to_bytes_short_mid_1 ipv6_to_bytes 0 \
+        32.1.4.112.90.2.0.0.115.8.12.94.0.110.0.15 \
+        2001:470:5a02::7308:c5e:6e:f
+    run_test ipv6_to_bytes_short_mid_2 ipv6_to_bytes 0 \
+        32.1.4.112.90.2.0.0.0.0.12.94.0.110.0.15 \
+        2001:470:5a02::c5e:6e:f
+    run_test ipv6_to_bytes_short_mid_6 ipv6_to_bytes 0 \
+        32.1.0.0.0.0.0.0.0.0.0.0.0.0.0.15 2001::f
+    run_test ipv6_to_bytes_llocal ipv6_to_bytes 0 \
+        254.128.0.0.0.0.0.0.185.2.212.180.169.203.117.198 \
+        fe80::b902:d4b4:a9cb:75c6%eno2
     # TODO
-    :
 }
 
 # Test operations with MAC addresses

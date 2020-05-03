@@ -87,6 +87,68 @@ ipv4_combine()
 
 ### Operations on IPv6 addresses #############################################
 
+# ipv6_from_bytes BYTES
+# Convert a sequence of bytes to an IPv6 address.
+# P: BYTES = a sequence of bytes
+# O: BYTES converted to an IPv6 address
+ipv6_from_bytes()
+{
+    : # TODO
+}
+
+# ipv6_to_bytes IP
+# Convert an IPv6 address to a sequence of bytes.
+# P: IP = an IPv6 address
+# O: IP as a sequence of bytes
+ipv6_to_bytes()
+{
+    local ip1 ip2 bytes1 bytes2 n1 n2 add
+    ip1=`ipv6_lladdr2addr "$1"`
+    ip2=''
+    case "$ip1" in
+        *::*)
+            ip2=${ip1#*::}
+            ip1=${ip1%::*}
+            ;;
+    esac
+    read n1 bytes1 <<EOF
+`_ipv6_part_to_bytes "$ip1"`
+EOF
+    read n2 bytes2 <<EOF
+`_ipv6_part_to_bytes "$ip2"`
+EOF
+    add=$((16-n1-n2))
+    while [ $add -gt 0 ]; do
+        bytes1="$bytes1.0"
+        add=$((add-1))
+    done
+    bytes1="$bytes1$bytes2"
+    echo ${bytes1#.}
+}
+
+# ipv6_lladdr2addr IP
+# Remove scope id from an link-local IPv6 address.
+# P: IP = an IPv6 address
+# O: IP without trailing '%' and a scope id; IP unchanged if it does not
+#    contain a scope id
+ipv6_lladdr2addr()
+{
+    echo ${1%\%*}
+}
+
+# ipv6_lladdr2scope IP
+# Get a scope id from an link-local IPv6 address.
+# P: IP = an IPv6 address with optional '%scope'
+# O: the scope id (a part of IP after '%'); the empty string if IP does not
+#    contain a scope id
+ipv6_lladdr2scope()
+{
+    case "$1" in
+        *%*) echo ${1#*%};;
+        *) echo '';;
+    esac
+}
+
 ### Operations on MAC (Ethernet) addresses ###################################
 
 # mac_from_bytes BYTES
@@ -338,6 +400,24 @@ _bytes_apply()
         result="$result.`$op $b1 $b2`"
     done
     echo ${result#.}
+}
+
+_ipv6_part_to_bytes()
+{
+    local ip bytes n i b
+    ip="$1"
+    bytes=''
+    n=0
+    if [ -n "$ip" ]; then
+        ip="$ip:"
+    fi
+    while [ -n "$ip" ]; do
+        i=0x${ip%%:*}
+        ip=${ip#*:}
+        bytes="$bytes.$((i/256)).$((i%256))"
+        n=$((n+2))
+    done
+    echo "$n $bytes"
 }
 
 _mac_is_mask()
