@@ -286,6 +286,38 @@ ipv6_combine()
     ipv6_from_bytes `bytes_or $net $ip`
 }
 
+# ipv6_eui64 MAC
+# Generate a local part of an IPv6 address from a MAC address
+# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+# O: an IPv6 address with upper 64 bits set to zero and lower 64 bits generated
+#    from MAC according to EUI-64
+ipv6_eui64()
+{
+    local mac
+    mac="$1"
+    ! mac_is_universal "$mac"
+    mac=`mac_set_bits $mac $?`
+    mac=`mac_to_bytes $mac`
+    ipv6_from_bytes 0.0.0.0.0.0.0.0.${mac%.*.*.*}.255.254.${mac#*.*.*.}
+}
+
+# ipv6_eui64_to_mac IP
+# Get a MAC address from an IPv6 address generated according to EUI-64
+# P: IP = an IPv6 address
+# O: the corresponding MAC address (in format of mac_from_bytes)
+ipv6_eui64_to_mac()
+{
+    local ip mac
+    ip="$1"
+    ip=`ipv6_to_bytes "$ip"`
+    ip=${ip#*.*.*.*.*.*.*.*.}
+    mac=${ip%.255.254.*.*.*}
+    mac="$mac.${ip#*.*.*.255.254.}"
+    mac=`mac_from_bytes $mac`
+    ! mac_is_universal "$mac"
+    mac_set_bits $mac $?
+}
+
 ### Operations on MAC (Ethernet) addresses ###################################
 
 # mac_from_bytes BYTES
