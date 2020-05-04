@@ -290,7 +290,7 @@ ipv6_combine()
 }
 
 # ipv6_eui64 MAC
-# Generate a local part of an IPv6 address from a MAC address
+# Generate a link-local IPv6 address from a MAC address
 # P: MAC = a MAC address (in any format accepted by mac_to_bytes)
 # O: an IPv6 address with upper 64 bits set to zero and lower 64 bits generated
 #    from MAC according to EUI-64
@@ -301,7 +301,7 @@ ipv6_eui64()
     ! mac_is_universal "$mac"
     mac=`mac_set_bits $mac $?`
     mac=`mac_to_bytes $mac`
-    ipv6_from_bytes 0.0.0.0.0.0.0.0.${mac%.*.*.*}.255.254.${mac#*.*.*.}
+    ipv6_from_bytes 254.128.0.0.0.0.0.0.${mac%.*.*.*}.255.254.${mac#*.*.*.}
 }
 
 # ipv6_eui64_to_mac IP

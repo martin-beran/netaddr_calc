@@ -354,7 +354,7 @@ test_ipv6()
         2001:470:6f:ca1::1 fe80::b902:d4b4:a9cb:75c6 ffff:ffff:ffff::
 
     run_test ipv6_eui64_1 ipv6_eui64 0 \
-        ::7285:c2ff:fe78:8752 70:85:c2:78:87:52
+        fe80::7285:c2ff:fe78:8752 70:85:c2:78:87:52
 
     run_test ipv6_eui64_to_mac_1 ipv6_eui64_to_mac 0 \
         70:85:c2:78:87:52 fe80::7285:c2ff:fe78:8752
