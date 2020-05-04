@@ -424,28 +424,52 @@ test_mac()
         ff:ff:ff:ff:ff:ff ff:ff:ff:ff:ff:ff '' ''
     run_test mac_set_bits_u_mf_0 mac_set_bits 0 \
         00:00:00:00:00:00 00:00:00:00:00:00 '' '1'
+    run_test mac_set_bits_u_mfalse_0 mac_set_bits 0 \
+        00:00:00:00:00:00 00:00:00:00:00:00 '' false
     run_test mac_set_bits_u_mf_1 mac_set_bits 0 \
         02:00:00:00:00:00 03:00:00:00:00:00 '' '1'
+    run_test mac_set_bits_u_mfalse_1 mac_set_bits 0 \
+        02:00:00:00:00:00 03:00:00:00:00:00 '' false
     run_test mac_set_bits_u_mf_ff mac_set_bits 0 \
         fe:ff:ff:ff:ff:ff ff:ff:ff:ff:ff:ff '' '1'
+    run_test mac_set_bits_u_mfalse_ff mac_set_bits 0 \
+        fe:ff:ff:ff:ff:ff ff:ff:ff:ff:ff:ff '' false
     run_test mac_set_bits_u_mt_0 mac_set_bits 0 \
         01:00:00:00:00:00 00:00:00:00:00:00 '' '0'
+    run_test mac_set_bits_u_mtrue_0 mac_set_bits 0 \
+        01:00:00:00:00:00 00:00:00:00:00:00 '' true
     run_test mac_set_bits_u_mt_1 mac_set_bits 0 \
         03:00:00:00:00:00 03:00:00:00:00:00 '' '0'
+    run_test mac_set_bits_u_mtrue_1 mac_set_bits 0 \
+        03:00:00:00:00:00 03:00:00:00:00:00 '' true
     run_test mac_set_bits_u_mt_ff mac_set_bits 0 \
         ff:ff:ff:ff:ff:ff ff:ff:ff:ff:ff:ff '' '0'
+    run_test mac_set_bits_u_mtrue_ff mac_set_bits 0 \
+        ff:ff:ff:ff:ff:ff ff:ff:ff:ff:ff:ff '' true
     run_test mac_set_bits_uf_m_0 mac_set_bits 0 \
         02:00:00:00:00:00 00:00:00:00:00:00 '1' ''
+    run_test mac_set_bits_ufalse_m_0 mac_set_bits 0 \
+        02:00:00:00:00:00 00:00:00:00:00:00 false ''
     run_test mac_set_bits_uf_m_1 mac_set_bits 0 \
         03:00:00:00:00:00 03:00:00:00:00:00 '1' ''
+    run_test mac_set_bits_ufalse_m_1 mac_set_bits 0 \
+        03:00:00:00:00:00 03:00:00:00:00:00 false ''
     run_test mac_set_bits_uf_m_ff mac_set_bits 0 \
         ff:ff:ff:ff:ff:ff ff:ff:ff:ff:ff:ff '1' ''
+    run_test mac_set_bits_ufalse_m_ff mac_set_bits 0 \
+        ff:ff:ff:ff:ff:ff ff:ff:ff:ff:ff:ff false ''
     run_test mac_set_bits_ut_m_0 mac_set_bits 0 \
         00:00:00:00:00:00 00:00:00:00:00:00 '0' ''
+    run_test mac_set_bits_utrue_m_0 mac_set_bits 0 \
+        00:00:00:00:00:00 00:00:00:00:00:00 true ''
     run_test mac_set_bits_ut_m_1 mac_set_bits 0 \
         01:00:00:00:00:00 03:00:00:00:00:00 '0' ''
+    run_test mac_set_bits_utrue_m_1 mac_set_bits 0 \
+        01:00:00:00:00:00 03:00:00:00:00:00 true ''
     run_test mac_set_bits_ut_m_ff mac_set_bits 0 \
         fd:ff:ff:ff:ff:ff ff:ff:ff:ff:ff:ff '0' ''
+    run_test mac_set_bits_utrue_m_ff mac_set_bits 0 \
+        fd:ff:ff:ff:ff:ff ff:ff:ff:ff:ff:ff true ''
     run_test mac_set_bits_uf_mf_0 mac_set_bits 0 \
         02:00:00:00:00:00 00:00:00:00:00:00 '1' '1'
     run_test mac_set_bits_uf_mf_1 mac_set_bits 0 \

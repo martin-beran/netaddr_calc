@@ -432,8 +432,8 @@ mac_set_bits()
         1|false) mac=`bytes_or $mac 2.0.0.0.0.0`;;
     esac
     case "$m" in
-        0) mac=`bytes_or $mac 1.0.0.0.0.0`;;
-        1) mac=`bytes_and $mac 254.255.255.255.255.255`;;
+        0|true) mac=`bytes_or $mac 1.0.0.0.0.0`;;
+        1|false) mac=`bytes_and $mac 254.255.255.255.255.255`;;
     esac
     echo `mac_from_bytes $mac`
 }
