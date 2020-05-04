@@ -1,12 +1,19 @@
+#!/bin/sh
+
 # Include this file into a shell (/bin/sh) script by
 # . netaddr_calc.sh
 # If the file cannot be directly included due to colliding names of functions,
 # it is possible to call functions defined in it like
 # ( . netaddr_calc.sh; FUNCTION1 [ARGS1...]; FUNCTION2 [ARGS2...]; ... )
-
+#
+# If called via a file name not ending by '.sh', it gets a function name and
+# arguments from command line arguments and runs the function. Functions
+# operating on byte sequences are intended mainly for internal purposes or for
+# use in script and they are not exported via the command line interface.
+#
 # In documentation comments of functions, P = parameters, O = stdout,
 # E = stderr, R = return value (exit status, 0 if unspecified)
-
+#
 # Boolean values use the reverted shell logic true=0, false=1.
 
 ### Operations on IPv4 addresses #############################################
@@ -32,51 +39,26 @@ ipv4_to_bytes()
     echo "$1"
 }
 
-# ipv4_bits2mask BITS
-# Convert a number of bits to a bitmask
-# P: BITS = number of initial bits
-# O: an with initial BITS bits set to 1, remaining bits set to 0
 ipv4_bits2mask()
 {
     bytes_bits2mask 4 $1
 }
 
-# ipv4_invert IP
-# Invert all bits of an IPv4 address
-# P: IP = IPv4 address
-# O: IP with all bits inverted
 ipv4_invert()
 {
     bytes_invert `ipv4_to_bytes $1`
 }
 
-# ipv4_and IP1 IP2
-# Combine two IPv4 addresses by bitwise AND
-# P: IP1, IP2 = IPv4 addresses
-# O: addresses combined
 ipv4_and()
 {
     bytes_and `ipv4_to_bytes $1` `ipv4_to_bytes $2`
 }
 
-# ipv4_or IP1 IP2
-# Combine two IPv4 addresses by bitwise OR
-# P: IP1, IP2 = IPv4 addresses
-# O: addresses combined
 ipv4_or()
 {
     bytes_or `ipv4_to_bytes $1` `ipv4_to_bytes $2`
 }
 
-# ipv4_combine NET IP [MASK]
-# Combines a network address and a local part of an address into a single IPv4
-# address
-# P: NET = an IPv4 address of a network (only bits in MASK are significant)
-#    IP = a local IPv4 address (only bits not in MASK are significant)
-#    MASK = a netmask for selecting significant bits from NET and IP; it can be
-#           a full mask as 4 period-separated decimal numbers or a single
-#           hexadecimal number starting with '0x', or a number of bits; if
-#           empty or missing, 24 is used
 ipv4_combine()
 {
     local net mask ip
@@ -100,14 +82,15 @@ ipv4_combine()
 # ipv6_from_bytes BYTES FORMAT
 # Convert a sequence of bytes to an IPv6 address.
 # P: BYTES = a sequence of bytes
-#    FORMAT = a format of the result (canonical if invalid, missing, or empty):
+#    FORMAT = a format of the result (canonical if invalid, missing, or
+#             empty):
 #             - canonical (any word '[Cc]*'): default, canonical textual
 #               representation according to RFC 5952
 #             - short (any word '[Ss]*'): the same as canonical
-#             - long (any word '[Ll]*'): without using '::', but leading zeros
-#               in individual 16-bit values omitted
-#             - full (any word '[Ff]*'): without using '::', each 16-bit value
-#               written as 4 hexadecimal digits (with leading zeros)
+#             - long (any word '[Ll]*'): without using '::', but leading
+#               zeros in individual 16-bit values omitted
+#             - full (any word '[Ff]*'): without using '::', each 16-bit
+#               value written as 4 hexadecimal digits (with leading zeros)
 # O: BYTES converted to an IPv6 address
 ipv6_from_bytes()
 {
@@ -205,21 +188,11 @@ EOF
     echo ${bytes1#.}
 }
 
-# ipv6_lladdr2addr IP
-# Remove scope id from an link-local IPv6 address.
-# P: IP = an IPv6 address
-# O: IP without trailing '%' and a scope id; IP unchanged if it does not
-#    contain a scope id
 ipv6_lladdr2addr()
 {
     echo ${1%\%*}
 }
 
-# ipv6_lladdr2scope IP
-# Get a scope id from an link-local IPv6 address.
-# P: IP = an IPv6 address with optional '%scope'
-# O: the scope id (a part of IP after '%'); the empty string if IP does not
-#    contain a scope id
 ipv6_lladdr2scope()
 {
     case "$1" in
@@ -228,50 +201,26 @@ ipv6_lladdr2scope()
     esac
 }
 
-# ipv6_bits2mask BITS
-# Convert a number of bits to a bitmask
-# P: BITS = number of initial bits
-# O: an with initial BITS bits set to 1, remaining bits set to 0
 ipv6_bits2mask()
 {
     bytes_bits2mask 16 $1
 }
 
-# ipv6_invert IP
-# Invert all bits of an IPv6 address
-# P: IP = IPv6 address
-# O: IP with all bits inverted
 ipv6_invert()
 {
     bytes_invert `ipv6_to_bytes $1`
 }
 
-# ipv6_and IP1 IP2
-# Combine two IPv6 addresses by bitwise AND
-# P: IP1, IP2 = IPv6 addresses
-# O: addresses combined
 ipv6_and()
 {
     bytes_and `ipv6_to_bytes $1` `ipv6_to_bytes $2`
 }
 
-# ipv6_or IP1 IP2
-# Combine two IPv6 addresses by bitwise OR
-# P: IP1, IP2 = IPv6 addresses
-# O: addresses combined
 ipv6_or()
 {
     bytes_or `ipv6_to_bytes $1` `ipv6_to_bytes $2`
 }
 
-# ipv6_combine NET IP [MASK]
-# Combines a network address and a local part of an address into a single IPv6
-# address
-# P: NET = an IPv6 address of a network (only bits in MASK are significant)
-#    IP = a local IPv6 address (only bits not in MASK are significant)
-#    MASK = a netmask for selecting significant bits from NET and IP; it can be
-#           an IPv6 address or a number of bits; if empty or missing, 64 is
-#           used
 ipv6_combine()
 {
     local net mask ip
@@ -289,11 +238,6 @@ ipv6_combine()
     ipv6_from_bytes `bytes_or $net $ip`
 }
 
-# ipv6_eui64 MAC
-# Generate a link-local IPv6 address from a MAC address
-# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
-# O: an IPv6 address with upper 64 bits set to zero and lower 64 bits generated
-#    from MAC according to EUI-64
 ipv6_eui64()
 {
     local mac
@@ -304,10 +248,6 @@ ipv6_eui64()
     ipv6_from_bytes 254.128.0.0.0.0.0.0.${mac%.*.*.*}.255.254.${mac#*.*.*.}
 }
 
-# ipv6_eui64_to_mac IP
-# Get a MAC address from an IPv6 address generated according to EUI-64
-# P: IP = an IPv6 address
-# O: the corresponding MAC address (in format of mac_from_bytes)
 ipv6_eui64_to_mac()
 {
     local ip mac
@@ -324,8 +264,8 @@ ipv6_eui64_to_mac()
 ### Operations on MAC (Ethernet) addresses ###################################
 
 # mac_from_bytes BYTES
-# Converts a sequence of bytes to a MAC address. For other output formats, use
-# bytes_to_hex.
+# Converts a sequence of bytes to a MAC address. For other output formats,
+# use bytes_to_hex.
 # P: BYTES = a sequence of bytes
 # O: BYTES converted to lowercase hexadecimal with bytes delimited by ':'
 mac_from_bytes()
@@ -343,19 +283,11 @@ mac_to_bytes()
     bytes_from_hex "$1"
 }
 
-# mac_is_bcast MAC
-# Test if a MAC address is broadcast.
-# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
-# R: 0 if MAC is a broadcast address, 1 otherwise
 mac_is_bcast()
 {
     _mac_is_mask "$1" 255.255.255.255.255.255
 }
 
-# mac_bool_bcast MAC
-# Test if a MAC address is broadcast.
-# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
-# O: "true" if MAC is a broadcast address, "false" otherwise
 mac_bool_bcast()
 {
     if mac_is_bcast "$1"; then
@@ -365,20 +297,11 @@ mac_bool_bcast()
     fi
 }
 
-# mac_is_mcast MAC
-# Test if a MAC address is multicast.
-# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
-# R: 0 if MAC is a multicast (including broadcast) address, 1 otherwise
 mac_is_mcast()
 {
     _mac_is_mask "$1" 1.0.0.0.0.0
 }
 
-# mac_bool_mcast MAC
-# Test if a MAC address is multicast.
-# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
-# O: "true" if MAC is a multicast (including broadcast) address,
-#    "false" otherwise
 mac_bool_mcast()
 {
     if mac_is_mcast "$1"; then
@@ -388,20 +311,11 @@ mac_bool_mcast()
     fi
 }
 
-# mac_is_universal MAC
-# Test if a MAC address is universally or locally administered.
-# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
-# R: 0 if MAC is a universally administered, 1 if locally administered
 mac_is_universal()
 {
     ! _mac_is_mask "$1" 2.0.0.0.0.0
 }
 
-# mac_bool_universal MAC
-# Test if a MAC address is universally or locally administered.
-# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
-# O: "true" if MAC is a universally administered,
-#    "false" if locally administered
 mac_bool_universal()
 {
     if mac_is_universal "$1"; then
@@ -411,15 +325,6 @@ mac_bool_universal()
     fi
 }
 
-# mac_set_bits MAC UNIVERSAL MCAST
-# Set special bits in a MAC address.
-# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
-#    UNIVERSAL = sets the address as universally (0 or "true") or locally (1 or
-#                "false") administered; other values do not modify the
-#                universal/local bit
-#    MCAST = sets the address as multicast (0) or unicast (1); other values
-#            do not modify the multicast/unicast bit
-# O: the modified MAC address (in format of mac_from_bytes)
 mac_set_bits()
 {
     local mac u m
@@ -440,19 +345,11 @@ mac_set_bits()
 
 ### IP/MASK pair #############################################################
 
-# ip_addrmask2addr ADDRMASK
-# Get the IP (v4/6) address from an "IP/MASK" pair.
-# P: ADDRMASK = address/mask
-# O: address
 ip_addrmask2addr()
 {
     echo ${1%/*}
 }
 
-# ip_addrmask2mask ADDRMASK
-# Get the IP (v4/6) mask from an "IP/MASK" pair.
-# P: ADDRMASK = address/mask
-# O: mask
 ip_addrmask2mask()
 {
     echo ${1#*/}
@@ -642,3 +539,189 @@ _mac_is_mask()
     mac=`bytes_and "$mac" "$mask"`
     test "$mac" = "$mask"
 }
+
+### Entry point ##############################################################
+
+case "$0" in
+    *.sh)
+        # Assume it is included into a shell script, do not execute a function
+        ;;
+    *)
+        # Assume it is called as a command, execute a function
+        functions='
+        ipv4_bits2mask
+        ipv4_invert
+        ipv4_and
+        ipv4_or
+        ipv4_combine
+        ipv6_lladdr2addr
+        ipv6_lladdr2scope
+        ipv6_bits2mask
+        ipv6_invert
+        ipv6_and
+        ipv6_or
+        ipv6_combine
+        ipv6_eui64
+        ipv6_eui64_to_mac
+        mac_is_bcast
+        mac_bool_bcast
+        mac_is_mcast
+        mac_bool_mcast
+        mac_is_universal
+        mac_bool_universal
+        mac_set_bits
+        ip_addrmask2addr
+        ip_addrmask2mask
+        '
+        functions=`echo $functions`
+        fun="$1"
+        shift
+        case " $functions " in
+            *" $fun "*)
+                $fun "$@"
+                ;;
+            *)
+                cat <<EOF
+usage: $0 function [args ...]
+
+Available functions (P=parameters, O=stdout, R=exist status):
+
+ipv4_bits2mask BITS
+    Convert a number of bits to a bitmask
+    P: BITS = number of initial bits
+    O: an with initial BITS bits set to 1, remaining bits set to 0
+
+ipv4_invert IP
+    Invert all bits of an IPv4 address
+    P: IP = IPv4 address
+    O: IP with all bits inverted
+
+ipv4_and IP1 IP2
+    Combine two IPv4 addresses by bitwise AND
+    P: IP1, IP2 = IPv4 addresses
+    O: addresses combined
+
+ipv4_or IP1 IP2
+    Combine two IPv4 addresses by bitwise OR
+    P: IP1, IP2 = IPv4 addresses
+    O: addresses combined
+
+ipv4_combine NET IP [MASK]
+    Combine a network address and a local part of an address into a single IPv4
+    address
+    P: NET = an IPv4 address of a network (only bits in MASK are significant)
+       IP = a local IPv4 address (only bits not in MASK are significant)
+       MASK = a netmask for selecting significant bits from NET and IP; it can
+              be a full mask as 4 period-separated decimal numbers or a single
+              hexadecimal number starting with '0x', or a number of bits; if
+              empty or missing, 24 is used
+
+ipv6_lladdr2addr IP
+    Remove scope id from an link-local IPv6 address.
+    P: IP = an IPv6 address
+    O: IP without trailing '%' and a scope id; IP unchanged if it does not
+       contain a scope id
+
+ipv6_lladdr2scope IP
+    Get a scope id from an link-local IPv6 address.
+    P: IP = an IPv6 address with optional '%scope'
+    O: the scope id (a part of IP after '%'); the empty string if IP does not
+       contain a scope id
+
+ipv6_bits2mask BITS
+    Convert a number of bits to a bitmask
+    P: BITS = number of initial bits
+    O: an with initial BITS bits set to 1, remaining bits set to 0
+
+ipv6_invert IP
+    Invert all bits of an IPv6 address
+    P: IP = IPv6 address
+    O: IP with all bits inverted
+
+ipv6_and IP1 IP2
+    Combine two IPv6 addresses by bitwise AND
+    P: IP1, IP2 = IPv6 addresses
+    O: addresses combined
+
+ipv6_or IP1 IP2
+    Combine two IPv6 addresses by bitwise OR
+    P: IP1, IP2 = IPv6 addresses
+    O: addresses combined
+
+ipv6_combine NET IP [MASK]
+    Combines a network address and a local part of an address into a single IPv6
+    address
+    P: NET = an IPv6 address of a network (only bits in MASK are significant)
+       IP = a local IPv6 address (only bits not in MASK are significant)
+       MASK = a netmask for selecting significant bits from NET and IP; it can
+              be an IPv6 address or a number of bits; if empty or missing, 64
+              is used
+
+ipv6_eui64 MAC
+    Generate a link-local IPv6 address from a MAC address
+    P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+    O: an IPv6 address with upper 64 bits set to zero and lower 64 bits
+       generated from MAC according to EUI-64
+
+ipv6_eui64_to_mac IP
+    Get a MAC address from an IPv6 address generated according to EUI-64
+    P: IP = an IPv6 address
+    O: the corresponding MAC address (in format of mac_from_bytes)
+
+mac_is_bcast MAC
+    Test if a MAC address is broadcast.
+    P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+    R: 0 if MAC is a broadcast address, 1 otherwise
+
+mac_bool_bcast MAC
+    Test if a MAC address is broadcast.
+    P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+    O: "true" if MAC is a broadcast address, "false" otherwise
+
+mac_is_mcast MAC
+    Test if a MAC address is multicast.
+    P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+    R: 0 if MAC is a multicast (including broadcast) address, 1 otherwise
+
+mac_bool_mcast MAC
+    Test if a MAC address is multicast.
+    P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+    O: "true" if MAC is a multicast (including broadcast) address,
+       "false" otherwise
+
+mac_is_universal MAC
+    Test if a MAC address is universally or locally administered.
+    P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+    R: 0 if MAC is a universally administered, 1 if locally administered
+
+mac_bool_universal MAC
+    Test if a MAC address is universally or locally administered.
+    P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+    O: "true" if MAC is a universally administered,
+       "false" if locally administered
+
+mac_set_bits MAC UNIVERSAL MCAST
+    Set special bits in a MAC address.
+    P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+       UNIVERSAL = sets the address as universally (0 or "true") or locally
+                   (1 or "false") administered; other values do not modify the
+                   universal/local bit
+       MCAST = sets the address as multicast (0) or unicast (1); other values
+               do not modify the multicast/unicast bit
+    O: the modified MAC address (in format of mac_from_bytes)
+
+ip_addrmask2addr ADDRMASK
+    Get the IP (v4/6) address from an "IP/MASK" pair.
+    P: ADDRMASK = address/mask
+    O: address
+
+ip_addrmask2mask ADDRMASK
+    Get the IP (v4/6) mask from an "IP/MASK" pair.
+    P: ADDRMASK = address/mask
+    O: mask
+EOF
+                exit 1
+                ;;
+        esac
+        ;;
+esac
