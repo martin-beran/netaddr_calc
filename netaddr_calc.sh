@@ -1,5 +1,8 @@
 # Include this file into a shell (/bin/sh) script by
 # . netaddr_calc.sh
+# If the file cannot be directly included due to colliding names of functions,
+# it is possible to call functions defined in it like
+# ( . netaddr_calc.sh; FUNCTION1 [ARGS1...]; FUNCTION2 [ARGS2...]; ... )
 
 # In documentation comments of functions, P = parameters, O = stdout,
 # E = stderr, R = return value (exit status, 0 if unspecified)
@@ -287,7 +290,7 @@ ipv6_combine()
 }
 
 # ipv6_eui64 MAC
-# Generate a local part of an IPv6 address from a MAC address
+# Generate a link-local IPv6 address from a MAC address
 # P: MAC = a MAC address (in any format accepted by mac_to_bytes)
 # O: an IPv6 address with upper 64 bits set to zero and lower 64 bits generated
 #    from MAC according to EUI-64
@@ -298,7 +301,7 @@ ipv6_eui64()
     ! mac_is_universal "$mac"
     mac=`mac_set_bits $mac $?`
     mac=`mac_to_bytes $mac`
-    ipv6_from_bytes 0.0.0.0.0.0.0.0.${mac%.*.*.*}.255.254.${mac#*.*.*.}
+    ipv6_from_bytes 254.128.0.0.0.0.0.0.${mac%.*.*.*}.255.254.${mac#*.*.*.}
 }
 
 # ipv6_eui64_to_mac IP
@@ -349,6 +352,19 @@ mac_is_bcast()
     _mac_is_mask "$1" 255.255.255.255.255.255
 }
 
+# mac_bool_bcast MAC
+# Test if a MAC address is broadcast.
+# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+# O: "true" if MAC is a broadcast address, "false" otherwise
+mac_bool_bcast()
+{
+    if mac_is_bcast "$1"; then
+        echo true
+    else
+        echo false
+    fi
+}
+
 # mac_is_mcast MAC
 # Test if a MAC address is multicast.
 # P: MAC = a MAC address (in any format accepted by mac_to_bytes)
@@ -356,6 +372,20 @@ mac_is_bcast()
 mac_is_mcast()
 {
     _mac_is_mask "$1" 1.0.0.0.0.0
+}
+
+# mac_bool_mcast MAC
+# Test if a MAC address is multicast.
+# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+# O: "true" if MAC is a multicast (including broadcast) address,
+#    "false" otherwise
+mac_bool_mcast()
+{
+    if mac_is_mcast "$1"; then
+        echo true
+    else
+        echo false
+    fi
 }
 
 # mac_is_universal MAC
@@ -367,12 +397,26 @@ mac_is_universal()
     ! _mac_is_mask "$1" 2.0.0.0.0.0
 }
 
+# mac_bool_universal MAC
+# Test if a MAC address is universally or locally administered.
+# P: MAC = a MAC address (in any format accepted by mac_to_bytes)
+# O: "true" if MAC is a universally administered,
+#    "false" if locally administered
+mac_bool_universal()
+{
+    if mac_is_universal "$1"; then
+        echo true
+    else
+        echo false
+    fi
+}
+
 # mac_set_bits MAC UNIVERSAL MCAST
 # Set special bits in a MAC address.
 # P: MAC = a MAC address (in any format accepted by mac_to_bytes)
-#    UNIVERSAL = sets the address as universally (0) or locally (1)
-#                administered; other values do not modify the universal/local
-#                bit
+#    UNIVERSAL = sets the address as universally (0 or "true") or locally (1 or
+#                "false") administered; other values do not modify the
+#                universal/local bit
 #    MCAST = sets the address as multicast (0) or unicast (1); other values
 #            do not modify the multicast/unicast bit
 # O: the modified MAC address (in format of mac_from_bytes)
@@ -384,12 +428,12 @@ mac_set_bits()
     m="$3"
     mac=`mac_to_bytes "$mac"`
     case "$u" in
-        0) mac=`bytes_and $mac 253.255.255.255.255.255`;;
-        1) mac=`bytes_or $mac 2.0.0.0.0.0`;;
+        0|true) mac=`bytes_and $mac 253.255.255.255.255.255`;;
+        1|false) mac=`bytes_or $mac 2.0.0.0.0.0`;;
     esac
     case "$m" in
-        0) mac=`bytes_or $mac 1.0.0.0.0.0`;;
-        1) mac=`bytes_and $mac 254.255.255.255.255.255`;;
+        0|true) mac=`bytes_or $mac 1.0.0.0.0.0`;;
+        1|false) mac=`bytes_and $mac 254.255.255.255.255.255`;;
     esac
     echo `mac_from_bytes $mac`
 }
