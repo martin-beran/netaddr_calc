@@ -1,5 +1,8 @@
 # Include this file into a shell (/bin/sh) script by
 # . netaddr_calc.sh
+# If the file cannot be directly included due to colliding names of functions,
+# it is possible to call functions defined in it like
+# ( . netaddr_calc.sh; FUNCTION1 [ARGS1...]; FUNCTION2 [ARGS2...]; ... )
 
 # In documentation comments of functions, P = parameters, O = stdout,
 # E = stderr, R = return value (exit status, 0 if unspecified)
